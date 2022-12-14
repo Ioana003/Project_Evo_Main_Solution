@@ -116,5 +116,10 @@ namespace Project_Evo_Prototype_1___Map_Creation
             inputtedString = input;
         }
 
+        public void SetCharacterArray(string[] charArray)
+        {
+            charactersArrayForWriting = charArray;
+        }
+
     }
 }

@@ -95,7 +95,7 @@ namespace Project_Evo_Main_Solution
             {
                 allowText = false;
 
-                if(Keyboard.GetState().IsKeyDown(Keys.Back))
+                if (Keyboard.GetState().IsKeyDown(Keys.Back))
                 {
                     showTyping = true;
                     allowKeyboardTap = true;
@@ -133,6 +133,7 @@ namespace Project_Evo_Main_Solution
                 tileArray = tileMap.CreateMap(SIZE_OF_CELL, NUMBER_OF_TILES, textBoxTexture);
 
                 textWriter.SetInputtedString("");
+                textWriter.SetCharacterArray(new string[8]);
 
             }
 
