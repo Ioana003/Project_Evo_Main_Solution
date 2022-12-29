@@ -9,7 +9,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-namespace Project_Evo_Prot_5___Tile_Map
+namespace Project_Evo_Main_Solution
 {
     internal class TileMap
     {

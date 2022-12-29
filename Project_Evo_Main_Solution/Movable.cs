@@ -5,7 +5,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-namespace Project_Evo_Neural_Network_Prototype_1
+namespace Project_Evo_Main_Solution
 {
     class Movable
     {

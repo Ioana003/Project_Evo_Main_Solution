@@ -6,12 +6,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TileMap_Y12
+namespace Project_Evo_Main_Solution
 {
-    class Sprite
+    public class Sprite
     {
-        protected Texture2D spriteText;
-        protected Vector2 spritePosition;
+        public Texture2D spriteText { get; set; }
+        public Vector2 spritePosition { get; set; }
         protected Rectangle? sourceRectangle;
         protected Color spriteColour;
         
