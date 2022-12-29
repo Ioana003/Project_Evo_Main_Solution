@@ -1,8 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using Project_Evo_Prot_5___Tile_Map;
-using Project_Evo_Prototype_1___Map_Creation;
 using System;
 
 namespace Project_Evo_Main_Solution
@@ -19,7 +17,7 @@ namespace Project_Evo_Main_Solution
         private MouseManager mouseManager = new MouseManager();
         private TextWriter textWriter = new TextWriter();
         private bool allowText = false;
-        private const int SIZE_OF_CELL = 10;
+        private int SIZE_OF_CELL = 50;
         private bool showTyping = true;
         private Random randomNumber = new Random();
         private bool allowKeyboardTap = true;
@@ -29,6 +27,27 @@ namespace Project_Evo_Main_Solution
         private Tile[,] tileArray;
         private float[][] map;
         const int NUMBER_OF_TILES = 100;
+
+        public static int screenWidth;
+        public static int screenHeight;
+        public Camera _camera;
+        public Player _player;
+
+        /*
+         * List of what works:
+         * - Camera
+         * - Map Creation (Randomised)
+         * - Text Box position
+         * - Clicking on the text box
+         * - Text displays properly
+         * - Camera zoom in and out
+         * 
+         * To do:
+         * - Plants
+         * - Animals
+         * - Options
+         * 
+         */
 
         public Game1()
         {
@@ -43,6 +62,9 @@ namespace Project_Evo_Main_Solution
         {
             // TODO: Add your initialization logic here
 
+            screenHeight = _graphics.PreferredBackBufferHeight;
+            screenWidth = _graphics.PreferredBackBufferWidth;
+
             base.Initialize();
         }
 
@@ -52,10 +74,14 @@ namespace Project_Evo_Main_Solution
 
             // TODO: use this.Content to load your game content here
 
+            _camera = new Camera();
+
             textBoxTexture = Content.Load<Texture2D>("textRectangle");
             textBoxRectangle = new Rectangle(Window.ClientBounds.Width / 2 - 150 / 2, Window.ClientBounds.Height / 2 - 25 / 2, 150, 25);
 
             font_def = Content.Load<SpriteFont>("default_text");
+
+            _player = new Player(textBoxTexture);
 
             textWriter = new TextWriter(textBoxRectangle);
 
@@ -79,8 +105,13 @@ namespace Project_Evo_Main_Solution
             // TODO: Add your update logic here
 
             // This is the text box that lets you input your seed
+
+            _camera.Follow(_player);
+
             if (showTyping == true)
             {
+                _player.spritePosition = new Vector2(Window.ClientBounds.Width / 2 - _player.spriteText.Width / 2, Window.ClientBounds.Height / 2 - _player.spriteText.Height / 2);
+
                 if (mouseManager.CheckIfClicked(textBoxRectangle) == true)
                 {
                     allowText = true;
@@ -99,6 +130,21 @@ namespace Project_Evo_Main_Solution
                 {
                     showTyping = true;
                     allowKeyboardTap = true;
+                }
+
+                _player.MovePlayer();
+
+                if(Keyboard.GetState().IsKeyDown(Keys.OemMinus))
+                {
+                    SIZE_OF_CELL = 10;
+                    _player.spritePosition = new Vector2(Window.ClientBounds.Width / 2 - _player.spriteText.Width / 2, Window.ClientBounds.Height / 2 - _player.spriteText.Height / 2);
+                    tileArray = tileMap.CreateMap(SIZE_OF_CELL, NUMBER_OF_TILES, textBoxTexture);
+                }
+                else if(Keyboard.GetState().IsKeyDown(Keys.OemPlus))
+                {
+                    SIZE_OF_CELL = 50;
+                    _player.spritePosition = new Vector2(Mouse.GetState().X * SIZE_OF_CELL / 10, Mouse.GetState().Y * SIZE_OF_CELL / 10);
+                    tileArray = tileMap.CreateMap(SIZE_OF_CELL, NUMBER_OF_TILES, textBoxTexture);
                 }
             }
 
@@ -146,7 +192,9 @@ namespace Project_Evo_Main_Solution
 
             // TODO: Add your drawing code here
 
-            _spriteBatch.Begin();
+            _spriteBatch.Begin(transformMatrix: _camera.transformMatrix);
+
+            _player.Draw(_spriteBatch);
 
             if (showTyping == true)
             {

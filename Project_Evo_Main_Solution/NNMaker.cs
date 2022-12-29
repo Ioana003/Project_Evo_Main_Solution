@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 
-namespace Project_Evo_Prototype_4_Node_Mutations
+namespace Project_Evo_Main_Solution
 {
     class NNMaker
     {

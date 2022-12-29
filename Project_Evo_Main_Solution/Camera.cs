@@ -6,61 +6,21 @@ using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace TileMap_Y12
+namespace Project_Evo_Main_Solution
 {
     public class Camera
     {
-        private Matrix transformMatrix;
-        private Vector2 centre;
-        private Viewport viewport;
+        public Matrix transformMatrix { get; private set; }
+        public Matrix position { get; private set; }
+        public Matrix offset { get; private set; }
 
-        public Camera(Viewport inViewport)
+        public void Follow(Player target)
         {
-            viewport = inViewport;
-        }
+            position = Matrix.CreateTranslation(-target.spritePosition.X - (target.spriteText.Width / 2), -target.spritePosition.Y - (target.spriteText.Height / 2), 0);
 
-        public Matrix Transform
-        {
-            get { return transformMatrix; }
-        }
+            offset = Matrix.CreateTranslation(Game1.screenWidth / 2, Game1.screenHeight / 2, 0);
 
-		public Vector2 GetCentre()
-		{
-			return centre;
-		}
-
-        public void Update(Vector2 inPosition, int inXOffset, int inYOffset)
-        {
-            int viewPortDivider = 2;
-            if (inPosition.X < viewport.Width / viewPortDivider)
-            {
-                centre.X = viewport.Width / viewPortDivider;
-            }
-            else if (inPosition.X > inXOffset - (viewport.Width / viewPortDivider))
-            {
-                centre.X = inXOffset - (viewport.Width / viewPortDivider);
-            }
-            else
-            {
-                centre.X = inPosition.X;
-            }
-            if (inPosition.Y < viewport.Height / viewPortDivider)
-            {
-                centre.Y = viewport.Height / viewPortDivider;
-            }
-            else if (inPosition.Y > inYOffset - (viewport.Height / viewPortDivider))
-            {
-                centre.Y = inYOffset - (viewport.Height / viewPortDivider);
-            }
-            else
-            {
-                centre.Y = inPosition.Y;
-            }
-
-            transformMatrix = Matrix.CreateTranslation(new Vector3(-centre.X + viewport.Width/viewPortDivider,
-                                                                   -centre.Y + viewport.Height/viewPortDivider, 0));
-
-			
+            transformMatrix = position * offset;
         }
 
     }

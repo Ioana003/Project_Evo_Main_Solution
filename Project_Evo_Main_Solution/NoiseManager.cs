@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Project_Evo_Prot_5___Tile_Map
+namespace Project_Evo_Main_Solution
 {
     class NoiseManager
     {

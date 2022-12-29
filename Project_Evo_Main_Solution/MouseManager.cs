@@ -5,7 +5,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-namespace Project_Evo_Prototype_1___Map_Creation
+namespace Project_Evo_Main_Solution
 {
     class MouseManager
     {

@@ -9,13 +9,13 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-namespace Project_Evo_Prot_5___Tile_Map
+namespace Project_Evo_Main_Solution
 {
     internal class FileManager
     {
 
         private Random randomNumber = new Random();
-        private TextWriter writer;
+        private StreamWriter writer;
         private StreamReader reader;
         private NoiseManager noiseManager = new NoiseManager();
         private float[][] perlinNoise;
@@ -27,7 +27,7 @@ namespace Project_Evo_Prot_5___Tile_Map
 
         public void WriteToFile(int tileAmount, int seed)
         {
-            writer = File.CreateText("C:\\Users\\10GherasimI.SCRCAT\\Desktop\\TextFiles\\TileMapFile1.txt");
+            writer = File.CreateText("..\\TileMapFile1.txt");
 
             perlinNoise = noiseManager.GeneratePerlinNoise(noiseManager.GenerateWhiteNoise(tileAmount, tileAmount, seed), 6);
 
@@ -52,7 +52,7 @@ namespace Project_Evo_Prot_5___Tile_Map
 
         public float[,] ReadFile(int tileAmount)
         {
-            reader = new StreamReader("C:\\Users\\10GherasimI.SCRCAT\\Desktop\\TextFiles\\TileMapFile1.txt");
+            reader = new StreamReader("..\\TileMapFile1.txt");
 
             string line = "";
             int counter = 0;
