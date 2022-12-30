@@ -13,7 +13,7 @@ namespace Project_Evo_Main_Solution
         public Texture2D spriteText { get; set; }
         public Vector2 spritePosition { get; set; }
         protected Rectangle? sourceRectangle;
-        protected Color spriteColour;
+        public Color spriteColour { get; set; }
         
 
         public Sprite()

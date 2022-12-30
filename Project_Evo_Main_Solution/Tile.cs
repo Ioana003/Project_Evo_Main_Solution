@@ -13,9 +13,9 @@ namespace Project_Evo_Main_Solution
     internal class Tile
     {
         private Texture2D texture;
-        private Rectangle position;
+        public Rectangle position { get; set; }
         private Color colour;
-        private string tileType;
+        public string tileType { get; set; }
 
         public Tile()
         {
