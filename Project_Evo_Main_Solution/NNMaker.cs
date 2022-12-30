@@ -5,7 +5,7 @@ using System.IO;
 
 namespace Project_Evo_Main_Solution
 {
-    class NNMaker
+    public class NNMaker
     {
         /* This is the class where most, if not all, of the NN functions will be held
          * In this class, I'll be able to make the NN

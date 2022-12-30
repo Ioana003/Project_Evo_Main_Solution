@@ -7,15 +7,19 @@ using Microsoft.Xna.Framework.Input;
 
 namespace Project_Evo_Main_Solution
 {
-    class Movable
+    public class Movable : Sprite
     {
         public Rectangle position { get; set; }
         public Texture2D texture { get; set; }
 
-        public Movable(Rectangle inPosition, Texture2D inTexture)
+        public Movable(Rectangle inPosition, Texture2D inTexture, Vector2 inSpritePosition, Color inColour)
         {
             position = inPosition;
             texture = inTexture;
+            spriteColour = inColour;
+            spritePosition = inSpritePosition;
+            spriteText = texture;
+            sourceRectangle = position;
         }
 
         public void MoveRight(int cellSize)
