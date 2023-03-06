@@ -14,30 +14,33 @@ namespace Project_Evo_Main_Solution
         public Vector2 spritePosition { get; set; }
         protected Rectangle? sourceRectangle;
         public Color spriteColour { get; set; }
-        
+        public Vector2 spriteSize { get; set; }
+
 
         public Sprite()
         {
         }
 
-        public Sprite(Texture2D inTexture, Vector2 inSpritePosition, Color inColour)
+        public Sprite(Texture2D inTexture, Vector2 inSpritePosition, Color inColour, Vector2 inSpriteSize)
         {
             spriteText = inTexture;
             spritePosition = inSpritePosition;
             spriteColour = inColour;
+            spriteSize = inSpriteSize;
         }
 
-        public Sprite(Texture2D inTexture, Vector2 inSpritePosition, Rectangle? inSource, Color inColour)
+        public Sprite(Texture2D inTexture, Vector2 inSpritePosition, Rectangle? inSource, Vector2 inSpriteSize, Color inColour)
         {
             spriteText = inTexture;
             spritePosition = inSpritePosition;
             sourceRectangle = inSource;
             spriteColour = inColour;
+            spriteSize = inSpriteSize;
         }
 
-        public void Draw(SpriteBatch spriteBatch)
+        public void Draw(SpriteBatch spriteBatch, float scale)
         {
-            spriteBatch.Draw(spriteText, new Vector2(spritePosition.X, spritePosition.Y), sourceRectangle, spriteColour);
+            spriteBatch.Draw(spriteText, spritePosition, sourceRectangle, spriteColour, 0, new Vector2(spriteSize.X / 2, spriteSize.Y / 2), scale, SpriteEffects.None, 0);
         }
 
     }

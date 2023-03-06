@@ -14,7 +14,6 @@ namespace Project_Evo_Main_Solution
     internal class FileManager
     {
 
-        private Random randomNumber = new Random();
         private StreamWriter writer;
         private StreamReader reader;
         private NoiseManager noiseManager = new NoiseManager();
