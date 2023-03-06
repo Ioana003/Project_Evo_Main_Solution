@@ -10,15 +10,10 @@ namespace Project_Evo_Main_Solution
     public class Movable : Sprite
     {
         public Rectangle position { get; set; }
-        public Texture2D texture { get; set; }
 
-        public Movable(Rectangle inPosition, Texture2D inTexture, Vector2 inSpritePosition, Color inColour)
+        public Movable(Texture2D inTexture, Vector2 inSpritePosition, Color inColour, Vector2 inSpriteSize) : base(inTexture, inSpritePosition, inColour, inSpriteSize)
         {
-            position = inPosition;
-            texture = inTexture;
-            spriteColour = inColour;
-            spritePosition = inSpritePosition;
-            spriteText = texture;
+            position = new Rectangle((int)inSpritePosition.X, (int)inSpritePosition.Y, (int)inSpriteSize.X, (int)inSpriteSize.Y);
             sourceRectangle = position;
         }
 

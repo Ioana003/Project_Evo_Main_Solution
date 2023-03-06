@@ -1,8 +1,10 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using SharpDX.MediaFoundation;
 using System;
 using System.Collections.Generic;
+using System.Drawing.Printing;
 
 namespace Project_Evo_Main_Solution
 {
@@ -28,7 +30,7 @@ namespace Project_Evo_Main_Solution
         private TileMap tileMap = new TileMap();
         private Tile[,] tileArray;
         private float[][] map;
-        const int NUMBER_OF_TILES = 100;
+        const int NUMBER_OF_TILES = 50;
         private int SIZE_OF_CELL = 50;
 
         // Camera variables
@@ -37,16 +39,23 @@ namespace Project_Evo_Main_Solution
         public Camera _camera;
         public Player _player;
         public bool allowPlayerMovement = false;
-        public bool zoomedIn = true;
+        public bool zoomed = true;
+        public float zoomLevel = 1;
 
         // Plant and Animals variables
         public Movable creatures;
-        public Movable plants;
+        public Plants plants;
         public List<Movable> listCreatures = new List<Movable>();
-        public List<Movable> listPlants = new List<Movable>();
+        public List<Plants> listPlants = new List<Plants>();
         public int STARTING_CREATURE_NUMBER = 100;
         public int STARTING_PLANT_NUMBER = 100;
         public NNMaker[][] neuralNet;
+
+        public float timer = 0;
+
+        private int plantsIDs = 0;
+
+        private bool plantIDsChanged = true;
 
         /*
          * List of what works:
@@ -61,6 +70,18 @@ namespace Project_Evo_Main_Solution
          * To do:
          * - Plants
          * - Animals
+         *      - Move forward-back
+         *      - Move left-right
+         *      - Rotate
+         *      - See
+         *      - Reproduce
+         *      - Eat
+         *      - [More advanced behaviours]
+         * - Weather
+         *      - Temperature Map using Perlin Noise
+         *      - Moisture Map using Perlin Noise
+         *      - Wind direction
+         *      - Wind strength
          * - Options
          * 
          */
@@ -132,9 +153,17 @@ namespace Project_Evo_Main_Solution
 
             // TODO: Add your update logic here
 
-            // This is the text box that lets you input your seed
+            var delta = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
-            _camera.Follow(_player);
+            timer += delta;
+
+            _camera.Follow(_player, zoomLevel);
+
+            // For the purposes of Debugging
+            if(Keyboard.GetState().IsKeyDown(Keys.LeftControl) && Keyboard.GetState().IsKeyDown(Keys.B))
+            {
+                var debug = 1;
+            }
 
             if (showTyping == true)
             {
@@ -151,6 +180,8 @@ namespace Project_Evo_Main_Solution
                 }
             }
 
+
+            // WHERE SIMULATION CODE STARTS
             else
             {
                 allowText = false;
@@ -161,71 +192,178 @@ namespace Project_Evo_Main_Solution
                     allowKeyboardTap = true;
                 }
 
-                if(Keyboard.GetState().IsKeyDown(Keys.OemMinus) && zoomedIn == true)
+                if(Keyboard.GetState().IsKeyDown(Keys.OemMinus) && zoomed == false)
                 {
-                    zoomedIn = false;
-                    SIZE_OF_CELL = 10;
-                    _player.spritePosition = new Vector2(Window.ClientBounds.Width / 2 - _player.spriteText.Width / 2, Window.ClientBounds.Height / 2 - _player.spriteText.Height / 2);
-                    tileArray = tileMap.CreateMap(SIZE_OF_CELL, NUMBER_OF_TILES, textBoxTexture);
-                    allowPlayerMovement = false;
-
-                    List<Movable> tempList = new List<Movable>();
-                    int size = 5;
-
-                    foreach(Movable m in listCreatures)
-                    {
-                        tempList.Add(new Movable(new Rectangle((int)m.spritePosition.X / size, (int)m.spritePosition.Y / size, 2, 2), m.texture, new Vector2(m.spritePosition.X / size, m.spritePosition.Y / size), m.spriteColour));
-                    }
-                    listCreatures.Clear();
-                    foreach(Movable m in tempList)
-                    {
-                        listCreatures.Add(m);
-                    }
-                    tempList.Clear();
-
-                    foreach (Movable m in listPlants)
-                    {
-                        tempList.Add(new Movable(new Rectangle((int)m.spritePosition.X / size, (int)m.spritePosition.Y / size, 2, 2), m.texture, new Vector2(m.spritePosition.X / size, m.spritePosition.Y / size), m.spriteColour));
-                    }
-                    listPlants.Clear();
-                    foreach (Movable m in tempList)
-                    {
-                        listPlants.Add(m);
-                    }
-                    tempList.Clear();
+                    zoomed = true;
+                    zoomLevel = zoomLevel * 0.5f;
                 }
-                else if(Keyboard.GetState().IsKeyDown(Keys.OemPlus) && zoomedIn == false)
+                else if(Keyboard.GetState().IsKeyDown(Keys.OemPlus) && zoomed == false)
                 {
-                    zoomedIn = true;
-                    SIZE_OF_CELL = 50;
-                    _player.spritePosition = new Vector2(Mouse.GetState().X * SIZE_OF_CELL / 10, Mouse.GetState().Y * SIZE_OF_CELL / 10);
-                    tileArray = tileMap.CreateMap(SIZE_OF_CELL, NUMBER_OF_TILES, textBoxTexture);
-                    allowPlayerMovement = true;
+                    zoomed = true;
+                    zoomLevel = zoomLevel * 2;
+                }
+                else if(Keyboard.GetState().IsKeyUp(Keys.OemPlus) && Keyboard.GetState().IsKeyUp(Keys.OemMinus))
+                {
+                    zoomed = false;
+                }
 
-                    List<Movable> tempList = new List<Movable>();
-                    int size = 5;
+                if(timer % 2 >= 0 && timer % 2 <= 0.05)
+                {
 
-                    foreach (Movable m in listCreatures)
+                    if(listPlants.Count < STARTING_PLANT_NUMBER)
                     {
-                        tempList.Add(new Movable(new Rectangle((int)m.spritePosition.X * size, (int)m.spritePosition.Y * size, 10, 10), m.texture, new Vector2(m.spritePosition.X * size, m.spritePosition.Y * size), m.spriteColour));
-                    }
-                    listCreatures.Clear();
-                    foreach (Movable m in tempList)
-                    {
-                        listCreatures.Add(m);
-                    }
-                    tempList.Clear();
+                        int x = randomNumber.Next(0, NUMBER_OF_TILES * SIZE_OF_CELL);
+                        int y = randomNumber.Next(0, NUMBER_OF_TILES * SIZE_OF_CELL);
+                        Rectangle tempPlace = new Rectangle(x, y, SIZE_OF_CELL, SIZE_OF_CELL);
+                        bool placed = false;
 
-                    foreach (Movable m in listPlants)
-                    {
-                        tempList.Add(new Movable(new Rectangle((int)m.spritePosition.X * size, (int)m.spritePosition.Y * size, 10, 10), m.texture, new Vector2(m.spritePosition.X * size, m.spritePosition.Y * size), m.spriteColour));
+                        foreach (Tile t in tileArray)
+                        {
+                            if (tempPlace.Intersects(t.position) && placed == false)
+                            {
+                                if (t.tileType != "Rock")
+                                {
+                                    plants = new Plants(textBoxTexture, new Vector2(x, y), Color.Green, new Vector2(10, 10), 20, 2, plantsIDs, true);
+                                    listPlants.Add(plants);
+                                    placed = true;
+
+                                    plantsIDs++;
+
+                                    plantIDsChanged = true;
+                                }
+                            }
+                        }
                     }
+
+                    if (plantIDsChanged == true)
+                    {
+                        foreach (Plants p in listPlants)
+                        {
+                            p.LearnIDs(listPlants);
+                        }
+
+                        plantIDsChanged = false;
+                    }
+
+                    // Plant Death
+                    Plants[] arrayBeforeDeaths = new Plants[listPlants.Count];
+                    arrayBeforeDeaths = listPlants.ToArray();
+                    Plants[] arrayAfterDeaths = new Plants[listPlants.Count];
+
+                    bool plantsHaveDied = false;
+
+                    foreach (Plants p in listPlants)
+                    {
+                        p.PlantActions(tileArray);
+
+                        if (p.health <= 0)
+                        {
+                            plantsHaveDied = true;
+                        }
+
+
+
+                        for (int i = 0; i < tileArray.GetUpperBound(0); i++)
+                        {
+                            for (int j = 0; j < tileArray.GetUpperBound(1); j++)
+                            {
+                                if (p.position.Intersects(tileArray[i, j].position) && p.countedOnPile == false)
+                                {
+                                    tileArray[i, j].plantAmount++;
+                                    p.countedOnPile = true;
+                                }
+
+                                if (tileArray[i, j].plantAmount >= 5)
+                                {
+                                    p.overcrowded = true;
+                                }
+                            }
+                        }
+                    }
+
+
+                    if (plantsHaveDied == true)
+                    {
+                        plantIDsChanged = true;
+
+                        arrayBeforeDeaths = listPlants.ToArray();
+
+                        for (int i = 0; i < arrayBeforeDeaths.Length; i++)
+                        {
+                            if (arrayBeforeDeaths[i].health >= 0)
+                            {
+                                arrayAfterDeaths[i] = arrayBeforeDeaths[i];
+                            }
+                            else
+                            {
+                                foreach(Tile t in tileArray)
+                                {
+                                    if (t.position.Intersects(arrayBeforeDeaths[i].position))
+                                    {
+                                        t.nutrientAmount = t.nutrientAmount + (int)arrayBeforeDeaths[i].totalVolume;
+                                        t.plantAmount--;
+                                    }
+                                }
+                            }
+                        }
+
+                        listPlants.Clear();
+
+                        foreach (Plants p in arrayAfterDeaths)
+                        {
+                            if (p != null)
+                            {
+                                listPlants.Add(p);
+                            }
+                        }
+
+                        plantsHaveDied = false;
+                    }
+
+
+                    Plants[] tempArrayPlants = new Plants[listPlants.Count];
+                    tempArrayPlants = listPlants.ToArray();
                     listPlants.Clear();
-                    foreach (Movable m in tempList)
+
+
+                    // Plant Reproduction
+                    int length = tempArrayPlants.Length;
+                    Plants[] newPlantsArray = new Plants[length];
+                    for (int i = 0; i < length; i++)
                     {
-                        listPlants.Add(m);
+                        foreach (Tile t in tileArray)
+                        {
+                            if (t.position.Intersects(tempArrayPlants[i].position) && tempArrayPlants[i].overcrowded == false)
+                            {
+                                if (randomNumber.Next(0, 1000) + tempArrayPlants[i].reproductiveDrive >= 900 && tempArrayPlants[i].matured == true)
+                                {
+                                    plantIDsChanged = true;
+
+                                    plantsIDs++;
+
+                                    newPlantsArray[i] = new Plants(textBoxTexture, new Vector2(), Color.Green, new Vector2(), 20, 2, plantsIDs, false);
+
+                                    newPlantsArray[i].Reproduce(tempArrayPlants[i], tileArray, listPlants);
+                                }
+                            }
+                        }
                     }
-                    tempList.Clear();
+
+                    foreach(Plants p in tempArrayPlants)
+                    {
+                        if (p != null)
+                        {
+                            listPlants.Add(p);
+                        }
+                    }
+
+                    foreach(Plants p in newPlantsArray)
+                    {
+                        if (p != null)
+                        {
+                            listPlants.Add(p);
+                        }
+                    }
                 }
             }
 
@@ -275,7 +413,7 @@ namespace Project_Evo_Main_Solution
                         {
                             if (t.tileType != "Rock")
                             {
-                                creatures = new Movable(new Rectangle(x, y, 10, 10), textBoxTexture, new Vector2(x, y), Color.MediumVioletRed);
+                                creatures = new Movable(textBoxTexture, new Vector2(x, y), Color.Purple, new Vector2(10, 10));
                                 listCreatures.Add(creatures);
                             }
                         }
@@ -289,15 +427,19 @@ namespace Project_Evo_Main_Solution
                     int x = randomNumber.Next(0, NUMBER_OF_TILES * SIZE_OF_CELL);
                     int y = randomNumber.Next(0, NUMBER_OF_TILES * SIZE_OF_CELL);
                     Rectangle tempPlace = new Rectangle(x, y, SIZE_OF_CELL, SIZE_OF_CELL);
+                    bool placed = false;
 
                     foreach (Tile t in tileArray)
                     {
-                        if (tempPlace.Intersects(t.position))
+                        if (tempPlace.Intersects(t.position) && placed == false)
                         {
                             if (t.tileType != "Rock")
                             {
-                                plants = new Movable(new Rectangle(x, y, 10, 10), textBoxTexture, new Vector2(x, y), Color.Green);
+                                plants = new Plants(textBoxTexture, new Vector2(x, y), Color.Green, new Vector2(10, 10), 20, 2, plantsIDs, true);
                                 listPlants.Add(plants);
+                                placed = true;
+
+                                plantsIDs++;
                             }
                         }
                     }
@@ -322,9 +464,11 @@ namespace Project_Evo_Main_Solution
 
             // TODO: Add your drawing code here
 
+            float timer = (float)gameTime.TotalGameTime.TotalSeconds;
+
             _spriteBatch.Begin(transformMatrix: _camera.transformMatrix);
 
-            _player.Draw(_spriteBatch);
+            _player.Draw(_spriteBatch, 0);
 
             if (showTyping == true)
             {
@@ -345,12 +489,17 @@ namespace Project_Evo_Main_Solution
 
                 foreach(Movable m in listCreatures)
                 {
-                    m.Draw(_spriteBatch);
+                    m.Draw(_spriteBatch, 1);
                 }
 
-                foreach(Movable m in listPlants)
+                foreach(Plants m in listPlants)
                 {
-                    m.Draw(_spriteBatch);
+                    m.stem.Draw(_spriteBatch, m.age / m.maturity);
+
+                    for(int i = 0; i < m.leaves.Length; i++)
+                    {
+                        m.leaves[i]?.Draw(_spriteBatch, m.age / m.maturity);
+                    }
                 }
             }
 

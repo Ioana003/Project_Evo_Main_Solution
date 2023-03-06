@@ -10,12 +10,14 @@ using Microsoft.Xna.Framework.Input;
 
 namespace Project_Evo_Main_Solution
 {
-    internal class Tile
+    public class Tile
     {
         private Texture2D texture;
         public Rectangle position { get; set; }
         private Color colour;
         public string tileType { get; set; }
+        public int plantAmount = 0;
+        public int nutrientAmount;
 
         public Tile()
         {
