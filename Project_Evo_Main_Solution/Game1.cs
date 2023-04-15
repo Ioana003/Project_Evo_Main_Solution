@@ -43,48 +43,24 @@ namespace Project_Evo_Main_Solution
         public float zoomLevel = 1;
 
         // Plant and Animals variables
-        public Movable creatures;
+        public Creatures creatures;
         public Plants plants;
-        public List<Movable> listCreatures = new List<Movable>();
+        public List<Creatures> listCreatures = new List<Creatures>();
         public List<Plants> listPlants = new List<Plants>();
         public int STARTING_CREATURE_NUMBER = 100;
         public int STARTING_PLANT_NUMBER = 100;
         public NNMaker[][] neuralNet;
 
+        public List<Food> listFood = new List<Food>();
+
         public float timer = 0;
 
         private int plantsIDs = 0;
+        private int creaturesIDs = 0;
 
         private bool plantIDsChanged = true;
+        private bool creaturesIDsChanged = true;
 
-        /*
-         * List of what works:
-         * - Camera
-         * - Map Creation (Randomised)
-         * - Text Box position
-         * - Clicking on the text box
-         * - Text displays properly
-         * - Camera zoom in and out
-         * - Player/Camera only moves whenever you are zoomed into the map
-         * 
-         * To do:
-         * - Plants
-         * - Animals
-         *      - Move forward-back
-         *      - Move left-right
-         *      - Rotate
-         *      - See
-         *      - Reproduce
-         *      - Eat
-         *      - [More advanced behaviours]
-         * - Weather
-         *      - Temperature Map using Perlin Noise
-         *      - Moisture Map using Perlin Noise
-         *      - Wind direction
-         *      - Wind strength
-         * - Options
-         * 
-         */
 
         public Game1()
         {
@@ -110,6 +86,8 @@ namespace Project_Evo_Main_Solution
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
             // TODO: use this.Content to load your game content here
+
+            // Method where content is loaded to use later
 
             _camera = new Camera();
 
@@ -138,12 +116,6 @@ namespace Project_Evo_Main_Solution
                 neuralNet[i] = new NNMaker[3];
             }
 
-            /* There are 3 networks each creatures will automatically start with:
-             * 1. Move Forward-Back: negative values move back, positive values move forward
-             * 2. Move Left-Right: negative values move left, positive values move right
-             * 3. WantToReproduce: positive values increase chance to multiply, negative values decrease chance to multiply
-             */
-
         }
 
         protected override void Update(GameTime gameTime)
@@ -153,18 +125,15 @@ namespace Project_Evo_Main_Solution
 
             // TODO: Add your update logic here
 
+            // Delta variable used as a timer for actions later in the code
             var delta = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
             timer += delta;
 
+            // Camera constantly follows player (a.k.a. where the user moves the camera itself)
             _camera.Follow(_player, zoomLevel);
 
-            // For the purposes of Debugging
-            if(Keyboard.GetState().IsKeyDown(Keys.LeftControl) && Keyboard.GetState().IsKeyDown(Keys.B))
-            {
-                var debug = 1;
-            }
-
+            // This if statement checks whether the user is in the main menu, by showing the menu buttons/text boxes. User cannot move the camera
             if (showTyping == true)
             {
                 allowPlayerMovement = false;
@@ -181,17 +150,20 @@ namespace Project_Evo_Main_Solution
             }
 
 
-            // WHERE SIMULATION CODE STARTS
+            // If the Main Menu isn't being shown, begin the actual simulation
             else
             {
                 allowText = false;
 
+                // This makes it so the user can return to the menu or reset the simulation
                 if (Keyboard.GetState().IsKeyDown(Keys.Back))
                 {
                     showTyping = true;
                     allowKeyboardTap = true;
                 }
 
+                // By pressing - or +, it allows the user to zoom in and out
+                // The booleans make it so it only zooms "once at a time"
                 if(Keyboard.GetState().IsKeyDown(Keys.OemMinus) && zoomed == false)
                 {
                     zoomed = true;
@@ -207,9 +179,37 @@ namespace Project_Evo_Main_Solution
                     zoomed = false;
                 }
 
-                if(timer % 2 >= 0 && timer % 2 <= 0.05)
+                // Every 2 seconds (roughly), each organism is able to do an action
+                if(timer % 2 >= 0 && timer % 2 <= 0.02)
                 {
 
+                    // This deals with decomposition of food items (plant or meat)
+                    Food[] arrayAfterDecomposition = new Food[listFood.Count];
+
+                    if(listFood != null)
+                    {
+                        foreach(Food f in listFood)
+                        {
+                            // For every food item that exists, it decomposes
+                            f?.Decompose(tileArray);
+
+                            if (f?.foodAmount > 0)
+                            {
+                                // If it has no more food/fully decomposed, do not add it to the temporary array
+                                arrayAfterDecomposition[listFood.IndexOf(f)] = f;
+                            }
+                        }
+                    }
+
+                    listFood.Clear();
+
+                    // Add every item in the array to the list
+                    foreach(Food f in arrayAfterDecomposition)
+                    {
+                        listFood.Add(f);
+                    }
+
+                    // This ensures that new, unique plants spawn whenever there are fewer than the minimum starting number; this way, the simulation can continue until a species makes a foothold eventually
                     if(listPlants.Count < STARTING_PLANT_NUMBER)
                     {
                         int x = randomNumber.Next(0, NUMBER_OF_TILES * SIZE_OF_CELL);
@@ -217,10 +217,12 @@ namespace Project_Evo_Main_Solution
                         Rectangle tempPlace = new Rectangle(x, y, SIZE_OF_CELL, SIZE_OF_CELL);
                         bool placed = false;
 
+                        // The boolean makes sure no more than 1 plant is placed down at a time
                         foreach (Tile t in tileArray)
                         {
                             if (tempPlace.Intersects(t.position) && placed == false)
                             {
+                                // Can only place on non-rock surfaces
                                 if (t.tileType != "Rock")
                                 {
                                     plants = new Plants(textBoxTexture, new Vector2(x, y), Color.Green, new Vector2(10, 10), 20, 2, plantsIDs, true);
@@ -235,6 +237,33 @@ namespace Project_Evo_Main_Solution
                         }
                     }
 
+                    // Exactly the same as the plants, except with creatures
+                    if (listCreatures.Count < STARTING_CREATURE_NUMBER)
+                    {
+                        int x = randomNumber.Next(0, NUMBER_OF_TILES * SIZE_OF_CELL);
+                        int y = randomNumber.Next(0, NUMBER_OF_TILES * SIZE_OF_CELL);
+                        Rectangle tempPlace = new Rectangle(x, y, SIZE_OF_CELL, SIZE_OF_CELL);
+                        bool placed = false;
+
+                        foreach (Tile t in tileArray)
+                        {
+                            if (tempPlace.Intersects(t.position) && placed == false)
+                            {
+                                if (t.tileType != "Rock")
+                                {
+                                    creatures = new Creatures(textBoxTexture, new Vector2(x, y), Color.Purple, new Vector2(10, 10), 20, 2, plantsIDs, true);
+                                    listCreatures.Add(creatures);
+                                    placed = true;
+
+                                    creaturesIDs++;
+
+                                    creaturesIDsChanged = true;
+                                }
+                            }
+                        }
+                    }
+
+                    // If there are new plants, their IDs are learned again by the plants; helps in competition
                     if (plantIDsChanged == true)
                     {
                         foreach (Plants p in listPlants)
@@ -252,6 +281,7 @@ namespace Project_Evo_Main_Solution
 
                     bool plantsHaveDied = false;
 
+                    // Each plant has a number of actions they can do. If their health reaches 0 or below, they become dead
                     foreach (Plants p in listPlants)
                     {
                         p.PlantActions(tileArray);
@@ -262,7 +292,7 @@ namespace Project_Evo_Main_Solution
                         }
 
 
-
+                        // Overcrowding increases aggression, hence why it has to be changed
                         for (int i = 0; i < tileArray.GetUpperBound(0); i++)
                         {
                             for (int j = 0; j < tileArray.GetUpperBound(1); j++)
@@ -281,7 +311,10 @@ namespace Project_Evo_Main_Solution
                         }
                     }
 
-
+                    // If plants have been tagged as one or more dying, two arrays are made
+                    // The beforeDeath array holds every single plant
+                    // The afterDeath array holds only plants that are still ALIVE
+                    // Food is made on the spot where the plants died
                     if (plantsHaveDied == true)
                     {
                         plantIDsChanged = true;
@@ -296,19 +329,24 @@ namespace Project_Evo_Main_Solution
                             }
                             else
                             {
-                                foreach(Tile t in tileArray)
+                                foreach (PlantAdditions p in arrayBeforeDeaths[i].leaves)
                                 {
-                                    if (t.position.Intersects(arrayBeforeDeaths[i].position))
+                                    if (p.health > 0)
                                     {
-                                        t.nutrientAmount = t.nutrientAmount + (int)arrayBeforeDeaths[i].totalVolume;
-                                        t.plantAmount--;
+                                        listFood.Add(new Food(p, textBoxTexture, p.spritePosition, Color.Gold, p.spriteSize));
                                     }
+                                }
+
+                                if (arrayBeforeDeaths[i].stem.health > 0)
+                                {
+                                    listFood.Add(new Food(arrayBeforeDeaths[i].stem, textBoxTexture, arrayBeforeDeaths[i].stem.spritePosition, Color.Gold, arrayBeforeDeaths[i].stem.spriteSize));
                                 }
                             }
                         }
 
                         listPlants.Clear();
 
+                        // All of the living plants are added to the list after it is emptied so there are no duplicates
                         foreach (Plants p in arrayAfterDeaths)
                         {
                             if (p != null)
@@ -327,6 +365,9 @@ namespace Project_Evo_Main_Solution
 
 
                     // Plant Reproduction
+                    // Each plant can only make 1 other plant at a time, hence the number of plants after reproducing being the same as the number of plants currently existing
+                    // The random number is there to ensure it doesn't happen every 2 seconds and lead to an overflow
+                    // Plants that are more likely to reproduce have a higher chance of producing offspring
                     int length = tempArrayPlants.Length;
                     Plants[] newPlantsArray = new Plants[length];
                     for (int i = 0; i < length; i++)
@@ -335,7 +376,7 @@ namespace Project_Evo_Main_Solution
                         {
                             if (t.position.Intersects(tempArrayPlants[i].position) && tempArrayPlants[i].overcrowded == false)
                             {
-                                if (randomNumber.Next(0, 1000) + tempArrayPlants[i].reproductiveDrive >= 900 && tempArrayPlants[i].matured == true)
+                                if (randomNumber.Next(0, 1000) + tempArrayPlants[i].reproductiveDrive >= 800 && tempArrayPlants[i].matured == true)
                                 {
                                     plantIDsChanged = true;
 
@@ -364,10 +405,130 @@ namespace Project_Evo_Main_Solution
                             listPlants.Add(p);
                         }
                     }
+                    // Both arrays are added to the list after being cleared
+
+
+                    // Creatures
+                    Creatures[] arrayBeforeDeathsC = new Creatures[listCreatures.Count];
+                    arrayBeforeDeaths = listPlants.ToArray();
+                    Creatures[] arrayAfterDeathsC = new Creatures[listCreatures.Count];
+
+                    bool creaturesHaveDied = false;
+
+                    // First, is death and other activities
+                    // Similar to Plants
+                    foreach(Creatures c in listCreatures)
+                    {
+                        c.DecideInputs(listPlants.ToArray(), listCreatures.ToArray(), tileArray);
+
+                        c.NeuralNet(tileArray, listFood);
+
+                        c.LearnIDs(listCreatures);
+
+                        c.AgeCreature();
+
+                        c.GrowEgg();
+
+                        for (int i = 0; i < listCreatures.Count; i++)
+                        {
+                            c.AssignThreat(i);
+                        }
+
+                        c.BaseMetabolismCost();
+
+                        c.Damage_Bite();
+
+                        c.Damage_Energy();
+
+                        if(c.health <= 0)
+                        {
+                            creaturesHaveDied = true;
+                        }
+
+                    }
+
+                    // Then, it creates a separate array to edit, empties the list, kills off any creatures with health bellow 0, and regroups the array and the list
+                    if (creaturesHaveDied == true)
+                    {
+                        creaturesIDsChanged = true;
+
+                        arrayBeforeDeathsC = listCreatures.ToArray();
+
+                        for (int i = 0; i < arrayBeforeDeathsC.Length; i++)
+                        {
+                            if (arrayBeforeDeathsC[i].health >= 0)
+                            {
+                                arrayAfterDeathsC[i] = arrayBeforeDeathsC[i];
+                            }
+                            else
+                            {
+                                foreach (CreatureAdditions p in arrayBeforeDeathsC[i].bodyParts)
+                                {
+                                    if (p.health > 0)
+                                    {
+                                        listFood.Add(new Food(p, textBoxTexture, p.spritePosition, Color.IndianRed, p.spriteSize));
+                                    }
+                                }
+                            }
+                        }
+
+                        listCreatures.Clear();
+
+                        foreach (Creatures p in arrayAfterDeathsC)
+                        {
+                            if (p != null)
+                            {
+                                listCreatures.Add(p);
+                            }
+                        }
+
+                        creaturesHaveDied = false;
+                    }
+
+                    // Creature Reproduction - makes arrays to hold the old and new creatures, mutates the new ones based on the parent, and then groups the two in the main list
+                    Creatures[] tempArrayCreatures = new Creatures[listCreatures.Count];
+                    tempArrayCreatures = listCreatures.ToArray();
+                    listCreatures.Clear();
+
+                    int lengthC = tempArrayCreatures.Length;
+                    Creatures[] newCreaturesArray = new Creatures[lengthC];
+                    for (int i = 0; i < lengthC; i++)
+                    {
+                        if (tempArrayCreatures[i].allowReproduction == true && tempArrayCreatures[i].matured == true && randomNumber.Next(1, 1000) + tempArrayCreatures[i].reproductiveDrive >= 880)
+                        {
+                            creaturesIDsChanged = true;
+
+                            creaturesIDs++;
+
+                            newCreaturesArray[i] = new Creatures(textBoxTexture, new Vector2(), Color.Purple, new Vector2(), 20, 2, creaturesIDs, false);
+
+                            newCreaturesArray[i].Reproduce(tempArrayCreatures[i], tileArray, listCreatures);
+                        }
+                    }
+
+                    foreach (Creatures p in tempArrayCreatures)
+                    {
+                        if (p != null)
+                        {
+                            listCreatures.Add(p);
+                        }
+                    }
+
+                    foreach (Creatures p in newCreaturesArray)
+                    {
+                        if (p != null)
+                        {
+                            listCreatures.Add(p);
+                        }
+                    }
+
                 }
             }
 
-            // If you press enter, it creates a perlin noise map and creates how it looks
+            // While in the menu, if you press Enter, with or without a seed, it creates a perlin noise map
+            // This is then used for the actual map the organisms live in
+            // No seed leads to random seed
+            // Each map is saved on a file if the user wants to load it as a save
             if (Keyboard.GetState().IsKeyDown(Keys.Enter) && allowKeyboardTap == true)
             {
                 allowKeyboardTap = false;
@@ -401,20 +562,25 @@ namespace Project_Evo_Main_Solution
 
                 listCreatures.Clear();
 
+                // These are the initial spawns of the creatures, which happen whenever the user starts the simulation
                 for (int i = 0; i < STARTING_CREATURE_NUMBER; i++)
                 {
                     int x = randomNumber.Next(0, NUMBER_OF_TILES * SIZE_OF_CELL);
                     int y = randomNumber.Next(0, NUMBER_OF_TILES * SIZE_OF_CELL);
                     Rectangle tempPlace = new Rectangle(x, y, SIZE_OF_CELL, SIZE_OF_CELL);
+                    bool placed = false;
 
                     foreach (Tile t in tileArray)
                     {
-                        if (tempPlace.Intersects(t.position))
+                        if (tempPlace.Intersects(t.position) && placed == false)
                         {
                             if (t.tileType != "Rock")
                             {
-                                creatures = new Movable(textBoxTexture, new Vector2(x, y), Color.Purple, new Vector2(10, 10));
+                                creatures = new Creatures(textBoxTexture, new Vector2(x, y), Color.Purple, new Vector2(10, 10), 20, 2, creaturesIDs, false);
                                 listCreatures.Add(creatures);
+                                placed = true;
+
+                                creaturesIDs++;
                             }
                         }
                     }
@@ -478,6 +644,14 @@ namespace Project_Evo_Main_Solution
                 {
                     textWriter.WriteText(_spriteBatch, font_def, inputString);
                 }
+
+                _spriteBatch.DrawString(font_def, "Instructions:", new Vector2(10, Window.ClientBounds.Height / 4 * 3), Color.Black);
+                _spriteBatch.DrawString(font_def, "W A S D - Move Camera", new Vector2(10, Window.ClientBounds.Height / 4 * 3 + 15), Color.Black);
+                _spriteBatch.DrawString(font_def, "-/+ - Zoom Out/In", new Vector2(10, Window.ClientBounds.Height / 4 * 3 + 30), Color.Black);
+                _spriteBatch.DrawString(font_def, "Click on the box to enter a seed or leave empty for a random seed.", new Vector2(10, Window.ClientBounds.Height / 4 * 3 + 45), Color.Black);
+                _spriteBatch.DrawString(font_def, "Press ENTER to start the simulation and enjoy!", new Vector2(10, Window.ClientBounds.Height / 4 * 3 + 60), Color.Black);
+                _spriteBatch.DrawString(font_def, "Alternatively, click BACKSPACE to come back to this menu.", new Vector2(10, Window.ClientBounds.Height / 4 * 3 + 75), Color.Black);
+
             }
 
             else
@@ -487,9 +661,38 @@ namespace Project_Evo_Main_Solution
                     t?.Draw(_spriteBatch);
                 }
 
-                foreach(Movable m in listCreatures)
+                if(listFood != null)
                 {
-                    m.Draw(_spriteBatch, 1);
+                    foreach(Food f in listFood)
+                    {
+                        if (f?.foodAmount > 0 && f?.totalFood > 0)
+                        {
+                            f.Draw(_spriteBatch, f.foodAmount / f.totalFood);
+                        }
+                    }
+                }
+
+                foreach(Creatures c in listCreatures)
+                {
+                    foreach(CreatureAdditions b in c.bodyParts)
+                    {
+                        b.Draw(_spriteBatch, c.age / c.maturity);
+                    }
+
+                    foreach (CreatureAdditions m in c.mouth)
+                    {
+                        m.Draw(_spriteBatch, c.age / c.maturity);
+                    }
+
+                    foreach (CreatureAdditions t in c.teeth)
+                    {
+                        t.Draw(_spriteBatch, c.age / c.maturity);
+                    }
+
+                    foreach (CreatureAdditions e in c.eyes)
+                    {
+                        e.Draw(_spriteBatch, c.age / c.maturity);
+                    }
                 }
 
                 foreach(Plants m in listPlants)

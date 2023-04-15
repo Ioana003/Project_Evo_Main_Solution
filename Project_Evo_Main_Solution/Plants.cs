@@ -132,6 +132,8 @@ namespace Project_Evo_Main_Solution
             health = maxHealth;
             energy = maxEnergy;
 
+            origin = new Vector2(spritePosition.X - spriteSize.X / 2, spritePosition.Y - spriteSize.Y / 2);
+
         }
 
         public void LearnIDs(List<Plants> listPlants)
@@ -164,9 +166,10 @@ namespace Project_Evo_Main_Solution
                 }
         }
 
+        // Essential for evolution, contains a lot of different variables that can be changed
         public void Mutate()
         {
-            if (random.Next(1, 1000) == 1)
+            if (random.Next(1, 100) == 1)
             {
                 this.height = this.height + random.Next(-2, 2);
 
@@ -176,7 +179,7 @@ namespace Project_Evo_Main_Solution
                 }
             }
 
-            if (random.Next(1, 1000) == 2)
+            if (random.Next(1, 100) == 2)
             {
                 this.leafAmount = this.leafAmount + random.Next(-1, 1);
 
@@ -197,7 +200,7 @@ namespace Project_Evo_Main_Solution
                 }
             }
 
-            if(random.Next(1, 1000) == 3)
+            if(random.Next(1, 100) == 3)
             {
                 this.reproductionDistance = this.reproductionDistance + random.Next(-5, 5);
 
@@ -207,12 +210,12 @@ namespace Project_Evo_Main_Solution
                 }
             }
 
-            if(random.Next(1, 1000) == 4)
+            if(random.Next(1, 100) == 4)
             {
                 this.reproductiveDrive = random.Next(-20, 20) + this.reproductiveDrive;
             }
 
-            if(random.Next(1, 1000) == 5)
+            if(random.Next(1, 100) == 5)
             {
 
                 Color tempColour = leaves[0].spriteColour;
@@ -234,7 +237,7 @@ namespace Project_Evo_Main_Solution
                 }
             }
 
-            if (random.Next(1, 1000) == 6)
+            if (random.Next(1, 100) == 6)
             {
 
                 Color tempColour = stem.spriteColour;
@@ -253,45 +256,46 @@ namespace Project_Evo_Main_Solution
                 stem.spriteColour = tempColour;
             }
 
-            if(random.Next(1, 1000) == 7)
+            if(random.Next(1, 100) == 7)
             {
                 this.seedSturdiness = seedSturdiness + random.NextFloat(-5, 5);
             }
 
-            if(random.Next(1, 1000) == 8)
+            if(random.Next(1, 100) == 8)
             {
                 this.seedGerminationTime = seedGerminationTime + random.NextFloat(-5, 5);
             }
 
-            if(random.Next(1, 1000) == 9)
+            if(random.Next(1, 100) == 9)
             {
                 this.aggressiveness = aggressiveness + random.Next(-1, 1);
             }
 
-            if(random.Next(1, 1000) == 10)
+            if(random.Next(1, 100) == 10)
             {
                 this.chemicalsDistance = chemicalsDistance + random.Next(-1, 1);
                 chemicalPosition = new Rectangle(position.X - chemicalsDistance, position.Y - chemicalsDistance, 2 * chemicalsDistance + position.Width, 2 * chemicalsDistance + position.Height);
             }
 
-            if(random.Next(1, 1000) == 11)
+            if(random.Next(1, 100) == 11)
             {
                 this.chemicalsStrength = chemicalsStrength + random.Next(-10, 10);
             }
 
-            if(random.Next(1, 1000) == 12)
+            if(random.Next(1, 100) == 12)
             {
                 this.rootsdistance = rootsdistance + random.Next(-2, 2);
                 rootsArea = new Rectangle(position.X - rootsdistance, position.Y - rootsdistance, 2 * rootsdistance + position.Width, 2 * rootsdistance + position.Height);
             }
 
-            if(random.Next(1, 1000) == 13)
+            if(random.Next(1, 100) == 13)
             {
                 this.maturity = maturity + random.Next(-10, 10);
             }    
 
         }
 
+        // Essential for evolution, copies over as many traits as possible from the parent
         public void Reproduce(Plants parent1, Tile[,] tileArray, List<Plants> plantList)
         {
 
@@ -391,6 +395,7 @@ namespace Project_Evo_Main_Solution
 
         }
 
+        // The energy cost for living. Older individuals need more energy
         public void BaseMetabolismCost()
         {
             if (oldAge == false)
@@ -403,6 +408,9 @@ namespace Project_Evo_Main_Solution
             }
         }
 
+        // A form of competition: it checks if there's any plants within its chemical distance Rectangle
+        // If it's aggressive enough towards them, it will release chemicals to kill off competition
+        // This CAN include offspring!
         public bool ReleaseChemicals(int i)
         {
 
@@ -426,6 +434,7 @@ namespace Project_Evo_Main_Solution
 
         }
 
+        // Damage taken from chemicals released by other plants
         public void Damage_Chemicals(int i)
         {
             if (plantThreatLevelID[i].chemicalPosition.Intersects(this.position) && plantThreatLevelID[i].releaseChemicals == true)
@@ -451,6 +460,7 @@ namespace Project_Evo_Main_Solution
             }
         }
 
+        // The amount of energy produced every action, based on how many leaves there are and their colour
         public void Photosynthesis()
         {
 
@@ -474,6 +484,7 @@ namespace Project_Evo_Main_Solution
             }
         }
 
+        // Absorbs nutrients from the tile map made with perlin noise
         public void AbsorbNutrients(Tile[,] tileArray)
         {
             foreach(Tile t in tileArray)
@@ -527,6 +538,7 @@ namespace Project_Evo_Main_Solution
             }
         }
 
+        // A single method for all (but one) plant action to make it less demanding on the hardware
         public void PlantActions(Tile[,] tileArray)
         {
             Heal();
