@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
+using SharpDX;
 
 namespace Project_Evo_Main_Solution
 {
@@ -38,6 +39,9 @@ namespace Project_Evo_Main_Solution
                 this.layers[i] = layers[i];
             }
 
+            this.layers[this.layers.Length - 1] = 9;
+
+
             InitNeurons();
             InitBiases();
             InitWeights();
@@ -51,14 +55,14 @@ namespace Project_Evo_Main_Solution
          * LN: [N] [N] [N] [N] [N]
          * LN acts as the OUTPUT layer! It goes DOWNWARDS, not sideways
          * L0 would be the input layer
-         * I want to be able to add in more nodes on the L1 - LN-1 layers, and petentially more inputs
+         * I want to be able to add in more nodes on the L1 - LN-1 layers
          */
 
         private void InitNeurons()
         {
             List<float[]> neuronList = new List<float[]>();
 
-            for (int i = 0; i < layers.Length; i++) // It makes 5 "rows" of neurons/nodes
+            for (int i = 0; i < layers.Length; i++) // It makes 5 (or any number) "rows" of neurons/nodes
             {
                 neuronList.Add(new float[layers[i]]); // Based on the values within the layers array, it adds that many layers/additional nodes onto the row/chain
             }
@@ -148,76 +152,13 @@ namespace Project_Evo_Main_Solution
             return neurons[neurons.Length - 1];
         }
 
-        public int CompareNetworks(NNMaker NueralNet)
-        {
-            if(NueralNet == null)
-            {
-                return 1;
-            }
-
-
-            if(fitness > NueralNet.fitness)
-            {
-                return 1;
-            }
-
-            else if (fitness < NueralNet.fitness)
-            {
-                return -1;
-            }
-
-            else
-            {
-                return 0;
-            }
-        }
-
-        // This is supposed to load the weightsw, biases etc. from a file onto the network at hand
-        public void LoadNetwork(string path)
-        {
-            TextReader tr = new StreamReader(path);
-            int numberOfLines = (int)new FileInfo(path).Length;
-            string[] listLines = new string[numberOfLines];
-            int index = 1;
-
-            for(int i = 1; i < numberOfLines; i++)
-            {
-                listLines[i] = tr.ReadLine();
-            }
-            tr.Close();
-
-            if(new FileInfo(path).Length > 0)
-            {
-                for(int i = 0; i < biases.Length; i++)
-                {
-                    for(int j = 0; j < biases[i].Length; j++)
-                    {
-                        biases[i][j] = float.Parse(listLines[index]);
-                        index++;
-                    }
-                }
-
-                for(int i = 0; i < weights.Length; i++)
-                {
-                    for (int j = 0; j < weights[i].Length; j++)
-                    {
-                        for(int k = 0; k < weights[i][j].Length; k++)
-                        {
-                            weights[i][j][k] = float.Parse(listLines[index]);
-                            index++;
-                        }
-                    }
-                }
-            }
-        }
-
         public void Mutate(int chance, float val)
         {
             for (int i = 0; i < biases.Length; i++) // Change the value of biases
             {
                 for (int j = 0; j < biases[i].Length; j++)
                 {
-                    biases[i][j] = (randomNumber.Next(0, chance) <= 5) ? biases[i][j] += randomNumber.Next((int)-val, (int)val) : biases[i][j];
+                    biases[i][j] = (randomNumber.Next(0, chance) <= 5) ? biases[i][j] += randomNumber.NextFloat((int)-val, (int)val) : biases[i][j];
                 }
             }
 
@@ -227,7 +168,7 @@ namespace Project_Evo_Main_Solution
                 {
                     for (int k = 0; k < weights[i][j].Length; k++)
                     {
-                        weights[i][j][k] = (randomNumber.Next(0, chance) <= 5) ? weights[i][j][k] += randomNumber.Next((int)-val, (int)val) : weights[i][j][k];
+                        weights[i][j][k] = (randomNumber.Next(0, chance) <= 5) ? weights[i][j][k] += randomNumber.NextFloat((int)-val, (int)val) : weights[i][j][k];
                     }
                 }
             }

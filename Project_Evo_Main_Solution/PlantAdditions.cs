@@ -42,6 +42,7 @@ namespace Project_Evo_Main_Solution
             spriteColour = inColour;
             spriteSize = new Vector2(width, length);
             sourceRectangle = new Rectangle(position.X, position.Y, (int)spriteSize.X, (int)spriteSize.Y);
+            origin = new Vector2(position.X + width / 2, position.Y + length / 2);
         }
 
 
